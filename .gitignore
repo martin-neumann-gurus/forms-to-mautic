@@ -1,0 +1,5 @@
+/vendor/
+
+# Ignore logs and temporary files
+*.log
+*.tmp
