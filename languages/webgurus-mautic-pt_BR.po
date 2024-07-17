@@ -1,0 +1,445 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Webgurus Forms to Mautic Integration\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-11 17:56+0000\n"
+"PO-Revision-Date: 2024-07-12 12:39+0000\n"
+"Last-Translator: \n"
+"Language-Team: Portuguese (Brazil)\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.10; wp-6.5.5\n"
+"X-Domain: webgurus-mautic"
+
+#: Integrations/FluentForms.php:208
+msgid ""
+"Activate Mautic integration conditionally based on the submission values of "
+"the form"
+msgstr ""
+"Ativar a integração do Mautic condicionalmente com base nos valores de envio "
+"do formulário"
+
+#: admin.php:286 admin.php:333 admin.php:360 Integrations/FluentForms.php:191
+msgid "Add"
+msgstr "Adicionar"
+
+#: admin.php:282 admin.php:329 admin.php:356 Integrations/FluentForms.php:151
+msgid "Add to Campaigns"
+msgstr "Adicionar às campanhas"
+
+#: admin.php:284 admin.php:331 admin.php:358 Integrations/FluentForms.php:169
+msgid "Add to Segments"
+msgstr "Adicionar aos segmentos"
+
+#: admin.php:315
+msgid "Address to Match"
+msgstr "Endereço para mapeamento"
+
+#: admin.php:377
+msgid "An Error occured while authenticating."
+msgstr "Ocorreu um erro durante a autenticação."
+
+#: admin.php:348
+msgid "Check if subscribed"
+msgstr "Verifique se está inscrito"
+
+#: admin.php:349
+msgid "Check if unsubscribed"
+msgstr "Verifique se está removido"
+
+#: Integrations/FluentForms.php:153 Integrations/FluentForms.php:162
+#: Integrations/FluentForms.php:171 Integrations/FluentForms.php:180
+msgid "Choose multiple"
+msgstr "Escolha múltipla"
+
+#: Integrations/FluentForms.php:200
+msgid "Choose one"
+msgstr "Escolha um"
+
+#: admin.php:276
+msgid "Comment Section"
+msgstr "Seção de Comentários"
+
+#: Integrations/FluentForms.php:207
+msgid "Conditional Logics"
+msgstr "Lógicas Condicionais"
+
+#: Integrations/FluentForms.php:68
+msgid "Configuration required!"
+msgstr "Configuração necessária!"
+
+#: admin.php:341
+msgid "Confirmation Pages"
+msgstr "Páginas De Confirmação"
+
+#: admin.php:405
+msgid "Disconnect Mautic"
+msgstr "Desconectar Mautic"
+
+#: admin.php:286 admin.php:333 admin.php:360 Integrations/FluentForms.php:187
+msgid "Do not Contact (Email Channel)"
+msgstr "Não Entrar em Contato (canal de E-mail)"
+
+#: Integrations/FluentForms.php:125
+msgid "Email Address"
+msgstr "Endereço de e-mail"
+
+#: admin.php:279
+msgid "Enable Checkbox in Comment Section for Newsletter Signup"
+msgstr ""
+"Ativar caixa de seleção na seção de comentários para inscrição no Boletim "
+"Informativo"
+
+#: admin.php:297
+msgid "Enable Checkbox in WooCommerce Checkout for Newsletter Signup"
+msgstr ""
+"Ativar caixa de seleção no Checkout do WooCommerce para inscrição no Boletim "
+"Informativo"
+
+#: Integrations/FluentForms.php:215
+msgid "Enable This feed"
+msgstr "Ativar este feed"
+
+#: admin.php:281 admin.php:328 admin.php:355 Integrations/FluentForms.php:147
+msgid ""
+"Enter a comma separated list of tags to add. Adding a minus before the tag "
+"will remove it."
+msgstr ""
+"Digite uma lista de tags separada por vírgulas para adicionar. Colocar um "
+"menos antes da tag a removerá."
+
+#: admin.php:378
+msgid "Error message:"
+msgstr "Mensagem de erro:"
+
+#: core.php:79
+msgid "Error when communicating to the Email system:"
+msgstr "Erro ao se comunicar com o sistema de E-mail:"
+
+#: Integrations/FluentForms.php:110
+msgid "Feed Name"
+msgstr "Nome do Feed"
+
+#: admin.php:308 admin.php:323 Integrations/FluentForms.php:117
+msgid "Field Mapping"
+msgstr "Mapeamento de Campo"
+
+#: admin.php:239
+msgid "Find Other Plugins"
+msgstr "Encontrar outros Plugins"
+
+#: Integrations/FluentForms.php:138
+msgid "Fluent Forms Value"
+msgstr "Valor no Fluent Forms"
+
+#: admin.php:264
+msgid "Forms to Mautic"
+msgstr "Forms para Mautic"
+
+#: admin.php:389
+msgid "Found settings of Fluent Forms for Mautic Plugin"
+msgstr "Encontradas configurações do plugin Fluent Forms for Mautic"
+
+#: admin.php:419
+#| msgid ""
+#| "Go to Your Mautic account dashboard, Click on the gear icon next to the "
+#| "username on top right corner. Click on Configuration settings >> API "
+#| "settings and enable the Api."
+msgid ""
+"Go to Your Mautic account dashboard, Click on the gear icon next to the "
+"username on top right corner. Click on Configuration settings >> API "
+"settings and enable the API."
+msgstr ""
+"Vá para o Painel de Controle do Mautic, clique no ícone de engrenagem ao "
+"lado do nome de usuário no canto superior direito. Clique em Configuração >> "
+"Configurações da API e ative a API."
+
+#: core.php:83
+#, php-format
+msgid "Hello %s!"
+msgstr "Olá %s!"
+
+#. URI of the plugin
+#. Author URI of the plugin
+msgid "https://www.webgurus.net"
+msgstr "https://www.webgurus.net"
+
+#: admin.php:316
+msgid ""
+"If Company field is filled out, the alternate address may be consulted for "
+"the home address in this case."
+msgstr ""
+"Se o campo Empresa for preenchido, o endereço alternativo poderá ser "
+"consultado para o endereço residencial neste caso."
+
+#: admin.php:241
+msgid ""
+"If you want to stay up to date about plugin updates and news around "
+"WordPress and Marketing Automation, sign up for our newsletter."
+msgstr ""
+"Se quiser se manter informado sobre atualizações de plug-ins e notícias "
+"relacionadas ao WordPress e à automação de marketing, inscreva-se em nosso "
+"boletim informativo."
+
+#: admin.php:281 admin.php:328 admin.php:355 Integrations/FluentForms.php:143
+msgid "Lead Tags"
+msgstr "Tags do Contato"
+
+#: admin.php:286 admin.php:333 admin.php:360 Integrations/FluentForms.php:193
+msgid "Maintain Unchanged"
+msgstr "Manter"
+
+#: admin.php:320
+msgid "Manual Mapping"
+msgstr "Mapeamento Manual"
+
+#. Author of the plugin
+msgid "Martin Neumann - Webgurus"
+msgstr "Martin Neumann - Webgurus"
+
+#: admin.php:400
+msgid "Mautic API is connected"
+msgstr "API Mautic está conectada"
+
+#: Integrations/FluentForms.php:291
+msgid "Mautic feed has scheduled ID:"
+msgstr "O Mautic feed tem agendada a ID:"
+
+#: admin.php:326 Integrations/FluentForms.php:137
+msgid "Mautic Field"
+msgstr "Campo do Mautic"
+
+#: Integrations/FluentForms.php:120
+msgid "Mautic Fields"
+msgstr "Campos do Mautic"
+
+#: Integrations/FluentForms.php:24
+msgid ""
+"Mautic is a fully-featured marketing automation platform that enables "
+"organizations of all sizes to send multi-channel communications at scale."
+msgstr ""
+"O Mautic é uma plataforma de automação de marketing completa que permite que "
+"organizações de todos os tamanhos enviem comunicações multicanais em escala."
+
+#: Integrations/FluentForms.php:70
+msgid "Mautic is not configured yet! Please configure your Mautic API first"
+msgstr ""
+"O Mautic ainda não está configurado! Configure sua API do Mautic primeiro"
+
+#: Integrations/FluentForms.php:34
+msgid "Mautic Settings"
+msgstr "Configurações do Mautic"
+
+#: admin.php:346
+msgid "Name of Confirmation Page"
+msgstr "Nome da Página de Confirmação"
+
+#: admin.php:350
+msgid "No Segment Check"
+msgstr "Sem Verificação De Segmento"
+
+#: Integrations/FluentForms.php:134
+msgid "Other Fields"
+msgstr "Outros Campos"
+
+#: admin.php:344
+msgid "Page Definitions"
+msgstr "Definições de Páginas"
+
+#: admin.php:422
+msgid ""
+"Paste the Mautic Base URL of your installation, also paste the Public Key "
+"and Secret Key. Then click: Save Changes."
+msgstr ""
+"Cole a URL base do Mautic da sua instalação, cole também a chave pública e a "
+"chave secreta. Em seguida, clique em: Salvar alterações."
+
+#: admin.php:380
+msgid ""
+"Please check the connection to your Mautic instance and the correctness of "
+"the keys."
+msgstr "Verifique a conexão com sua instância Mautic e a exatidão das chaves."
+
+#: Integrations/FluentForms.php:39
+msgid ""
+"Please use the Forms to Mautic plugin settings in order to configure the "
+"connection with the Mautic API."
+msgstr ""
+"Por favor, use as configurações do plugin Forms para Mautic, a fim de "
+"configurar a conexão com a API Mautic."
+
+#: admin.php:269
+msgid "Public Key"
+msgstr "Chave Pública"
+
+#: admin.php:240
+msgid "Read the Blog"
+msgstr "Leia o Blog"
+
+#: admin.php:286 admin.php:333 admin.php:360 Integrations/FluentForms.php:192
+msgid "Remove"
+msgstr "Remover"
+
+#: admin.php:283 admin.php:330 admin.php:357 Integrations/FluentForms.php:160
+msgid "Remove from Campaigns"
+msgstr "Remover das campanhas"
+
+#: admin.php:285 admin.php:332 admin.php:359 Integrations/FluentForms.php:178
+msgid "Remove from Segments"
+msgstr "Remover dos segmentos"
+
+#: Integrations/FluentForms.php:38
+msgid "Save Settings"
+msgstr "Salvar Configurações"
+
+#: admin.php:270
+msgid "Secret Key"
+msgstr "Chave Secreta"
+
+#: admin.php:347
+msgid "Segment Check"
+msgstr "Verificação De Segmento"
+
+#: admin.php:352
+msgid "Segment to confirm"
+msgstr "Segmento para confirmar"
+
+#: Integrations/FluentForms.php:118 Integrations/FluentForms.php:135
+msgid ""
+"Select which Fluent Form fields pair with their respective Mautic fields."
+msgstr ""
+"Selecione quais campos de Fluent Forms são mapeados com seus respectivos "
+"campos no Mautic."
+
+#. Description of the plugin
+msgid "Send all your WordPress sign ups directly to Mautic"
+msgstr "Envie todas as suas cadastros no WordPress diretamente para o Mautic"
+
+#: admin.php:287 admin.php:334 admin.php:361 Integrations/FluentForms.php:198
+msgid "Send Email"
+msgstr "Enviar Email"
+
+#: Integrations/API.php:384
+msgid "Send no Email"
+msgstr "Enviar nenhum Email"
+
+#: Integrations/FluentForms.php:71
+msgid "Set Mautic API"
+msgstr "Configurar API do Mautic"
+
+#: admin.php:280 admin.php:298 core.php:9 Integrations/WooCommerce.php:13
+msgid "Sign me up for the newsletter"
+msgstr "Inscreva-me no Boletim Informativo"
+
+#: admin.php:243
+msgid "Sign up Now"
+msgstr "Inscreva-se Agora"
+
+#: core.php:64 core.php:73
+msgid "Something went wrong with your confirmation request."
+msgstr "Algo deu errado com sua solicitação de confirmação."
+
+#: Integrations/FluentForms.php:213
+msgid "Status"
+msgstr "Status"
+
+#: Integrations/FluentForms.php:145
+msgid "Tags"
+msgstr "Tags"
+
+#: admin.php:280 admin.php:298
+msgid "Text that appears on Checkbox to ask for the Newsletter Signup"
+msgstr ""
+"Texto que aparece na caixa de seleção para solicitar a inscrição no Boletim "
+"Informativo"
+
+#: admin.php:354
+msgid ""
+"Text to show if confirmation action already resolved (segment check already "
+"true)"
+msgstr ""
+"Texto para mostrar se a ação de confirmação já foi resolvida (verificação de "
+"segmento já é verdadeira)"
+
+#: admin.php:353
+msgid "Text to show if confirmation action will be taken (segment check false)"
+msgstr ""
+"Texto para mostrar se a ação de confirmação será tomada (verificação de "
+"segmento ainda falso)"
+
+#: admin.php:420
+msgid ""
+"Then go to \"API Credentials\" and create a new oAuth 2 credentials, putting "
+"as redirect URL:"
+msgstr ""
+"Então vá em \"Crendenciais API\" e crie uma nova credential oAuth 2, "
+"colocando como URL de redirecionamento:"
+
+#: Integrations/FluentForms.php:188
+msgid ""
+"This option determines whether a contact should be added or removed from the "
+"Do Not Contact Email list in Mautic"
+msgstr ""
+"Essa opção determina se um contato deve ser adicionado ou removido da lista "
+"de não entrar em contato, canal E-mails no Mautic"
+
+#: admin.php:418
+msgid "To Authenticate Mautic you have to configure your API connection first"
+msgstr ""
+"Para autenticar o Mautic você tem que configurar sua conexão API primeiro"
+
+#: admin.php:403
+msgid "Verify Connection Again"
+msgstr "Verifique a Conexão Novamente"
+
+#: admin.php:309
+msgid "We always match the following fields:"
+msgstr "Sempre correspondemos aos seguintes campos:"
+
+#. Name of the plugin
+msgid "Webgurus Forms to Mautic Integration"
+msgstr "Webgurus Forms para Mautic Integração"
+
+#: admin.php:238
+msgid ""
+"Welcome to WebGurus WordPress plugins. We are trying to make your life on "
+"WordPress more productive."
+msgstr ""
+"Bem-vindo aos plug-ins do WebGurus para WordPress. Estamos tentando tornar "
+"sua vida no WordPress mais produtiva."
+
+#: admin.php:325
+msgid "WooCommerce Field"
+msgstr "Campo WooCommerce"
+
+#: Integrations/FluentForms.php:147
+msgid "You can use Fluent Forms smart tags here"
+msgstr "Você pode usar as smart tags do Fluent Forms aqui"
+
+#: admin.php:392
+msgid "You have successfully authenticated with Mautic"
+msgstr "Você se autenticou com sucesso no Mautic"
+
+#: Integrations/FluentForms.php:112
+msgid "Your Feed Name"
+msgstr "Nome do Seu Feed"
+
+#: Integrations/FluentForms.php:43
+msgid "Your Mautic API integration is up and running"
+msgstr "Sua integração com a API Mautic está funcionando"
+
+#: Integrations/FluentForms.php:37
+msgid "Your Mautic API Key is not valid"
+msgstr "Sua chave de API Mautic não é válida"
+
+#: Integrations/FluentForms.php:36
+msgid "Your Mautic API Key is valid"
+msgstr "Sua chave de API Mautic é válida"
+
+#: admin.php:268
+msgid "Your Mautic Base URL"
+msgstr "Sua URL base do Mautic"

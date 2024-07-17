@@ -1,0 +1,14 @@
+{
+    "name": "webgurus/mautic-integration",
+    "description": "Webgurus Mautic Integration",
+    "type": "wordpress-plugin",
+    "require": {
+        "htmlburger/carbon-fields": "^3.6"
+    },
+    "authors": [
+        {
+            "name": "Martin Neumann"
+        }
+    ],
+    "minimum-stability": "stable"
+}
