@@ -1,6 +1,6 @@
 <?php
 
-namespace WebgurusMautic\Integrations;
+namespace Webgurus\Mautic;
 
 add_action( 'woocommerce_after_order_notes', function ( $checkout ) {
     $settings = get_option('wg_mautic_woocommerce');
@@ -42,15 +42,17 @@ add_action( 'woocommerce_checkout_order_processed', function ( $order_id, $data,
                 $address .= '_';
                 if (empty($data[$address.'company'])) {
                     $prefix = '';
+                    $subscriber = wc_match_address($subscriber, $prefix, $address, $data);
                 }
                 else {
                     $prefix = 'company';
-                    $subscriber['companyname'] = $data[$address.'company'];
+                    //$subscriber['companyname'] = $data[$address.'company'];  //Not working that way, we may implement company treatment later
+                    //$subscriber = wc_match_address($subscriber, $prefix, $address, $data);
                 }
                 $subscriber['firstname'] = $data[$address.'first_name'];
                 $subscriber['lastname'] = $data[$address.'last_name'];
 
-                $subscriber = wc_match_address($subscriber, $prefix, $address, $data);
+                
                 //----Check if Billing and Shipping Name are equal-----
                 if (($data['billing_first_name'] == $data['shipping_first_name']) && ($data['billing_last_name'] == $data['shipping_last_name'])) {
                     if ($address == 'billing_') {
@@ -62,8 +64,8 @@ add_action( 'woocommerce_checkout_order_processed', function ( $order_id, $data,
                     if (empty($prefix)) {
                         //---We got home address, check for company address
                         if (!empty($data[$address2.'company'])) {
-                            $subscriber['companyname'] = $data[$address2.'company'];
-                            $subscriber = wc_match_address($subscriber, 'company', $address2, $data);
+                            //$subscriber['companyname'] = $data[$address2.'company'];  //Not working that way
+                            //$subscriber = wc_match_address($subscriber, 'company', $address2, $data);
                         }
                     }
                     else {
@@ -97,7 +99,7 @@ function wc_match_address($subscriber, $prefix, $address, $data) {
         'address1' => 'address_1',
         'address2' => 'address_2'
     ];
-    $wc_countries = WC()->countries;
+    $map = Mautic_Mapping::instance();
     
     foreach ($match as $key => $wc_key) {
         $value = $data[$address . $wc_key];
@@ -105,19 +107,16 @@ function wc_match_address($subscriber, $prefix, $address, $data) {
         switch ($wc_key) {
             case 'country':
                 $country_code = $value;
-                switch ($country_code) {
-
-                    default:
-                        $countries = $wc_countries->get_countries();
-                        $value = $countries[$country_code];
-                }
-                
+                $countries = $map->get_countries();
+                $value = $countries[$country_code];               
                 break;
 
             case 'state':
-                $states = $wc_countries->get_states( $country_code );
-                if (isset( $states[$value] )) $value = $states[$value];
-
+                $states = $map->get_states();
+                if (isset( $states[$country_code] )) {
+                    $states = $states[$country_code];
+                    if (isset( $states[$value] )) $value = $states[$value];
+                }
         }
         $subscriber[$prefix . $key] = $value;
     }

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Webgurus Forms to Mautic Integration\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-07-11 14:21+0000\n"
-"PO-Revision-Date: 2024-08-04 21:59+0000\n"
+"PO-Revision-Date: 2024-08-04 15:41+0000\n"
 "Last-Translator: \n"
 "Language-Team: Deutsch\n"
 "Language: de_DE\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.6.10; wp-6.6.1\n"
+"X-Loco-Version: 2.6.10; wp-6.5.5\n"
 "X-Domain: webgurus-mautic"
 
 #: Integrations/FluentForms.php:214
@@ -367,7 +367,7 @@ msgstr "Fehlgeschlagene Einträge verarbeiten"
 
 #: admin.php:478
 msgid "Processed Submissions"
-msgstr "Verarbeitete Einträge"
+msgstr "Bearbeitete Einträge"
 
 #: core.php:136
 #, php-format

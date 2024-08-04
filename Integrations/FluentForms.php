@@ -1,6 +1,6 @@
 <?php
 
-namespace WebgurusMautic\Integrations;
+namespace Webgurus\Mautic;
 
 use FluentForm\App\Services\Integrations\IntegrationManager;
 use FluentForm\Framework\Foundation\Application;
@@ -32,21 +32,22 @@ class Bootstrap extends IntegrationManager
         return [
             'logo'               => $this->logo,
             'menu_title'         => __('Mautic Settings', 'webgurus-mautic'),
-            'menu_description'   => $this->description,
-            'valid_message'      => __('Your Mautic API Key is valid', 'webgurus-mautic'),
-            'invalid_message'    => __('Your Mautic API Key is not valid', 'webgurus-mautic'),
-            'save_button_text'   => __('Save Settings', 'webgurus-mautic'),
-            'config_instruction' => __('Please use the Forms to Mautic plugin settings in order to configure the connection with the Mautic API.', 'webgurus-mautic'),
+            'menu_description'   => __('Please use the Webgurus Forms to Mautic plugin settings in order to configure the connection with the Mautic API.', 'webgurus-mautic'),
+            'valid_message'      => __('Mautic API is connected', 'webgurus-mautic'),
+            'invalid_message'    => __('You still need to configure your Mautic API', 'webgurus-mautic'),
+            'save_button_text'   => __('Go to Mautic Settings', 'webgurus-mautic'),
+            'config_instruction' => __('Please use the Webgurus Forms to Mautic plugin settings in order to configure the connection with the Mautic API.', 'webgurus-mautic'),
             'fields'             => [],
             'hide_on_valid'      => true,
             'discard_settings'   => [
-                'section_description' => __('Your Mautic API integration is up and running', 'webgurus-mautic'),
+                'section_description' => __('Mautic API is connected', 'webgurus-mautic'),
+                'button_text'         => __('Disconnect Mautic', 'webgurus-mautic'),  
                 'data'                => [
                     'api_url'       => '',
                     'client_id'     => '',
                     'client_secret' => ''
                 ],
-                'show_verify'         => true
+                'show_verify'         => false
             ]
         ];
     }
@@ -57,7 +58,12 @@ class Bootstrap extends IntegrationManager
         return $api->settings;
     }
 
-
+    public function saveGlobalSettings($settings) {
+        wp_send_json_success([
+            'message' => __('Redirecting to Mautic settings', 'wgmautic'),
+            'redirect_url' => admin_url('admin.php?page=crb_carbon_fields_container_wg_mautic.php')
+        ], 200);
+    }
 
     public function pushIntegration($integrations, $formId)
     {
@@ -68,7 +74,7 @@ class Bootstrap extends IntegrationManager
             'configure_title'       => __('Configuration required!','webgurus-mautic'),
             'global_configure_url'  => admin_url('admin.php?page=crb_carbon_fields_container_forms_to_mautic.php'),
             'configure_message'     => __('Mautic is not configured yet! Please configure your Mautic API first', 'webgurus-mautic'),
-            'configure_button_text' => __('Set Mautic API', 'webgurus-mautic')
+            'configure_button_text' => __('Go to Mautic Settings', 'webgurus-mautic')
         ];
         return $integrations;
     }
@@ -114,11 +120,11 @@ class Bootstrap extends IntegrationManager
                 ],
                 [
                     'key'                => 'fields',
-                    'label'              => __('Field Mapping', 'webgurus-mautic'),
+                    'label'              => __('Map Fields', 'webgurus-mautic'),
                     'tips'               => __('Select which Fluent Form fields pair with their respective Mautic fields.', 'webgurus-mautic'),
                     'component'          => 'map_fields',
-                    'field_label_remote' => __('Mautic Fields', 'webgurus-mautic'),
-                    'field_label_local'  => 'Form Field',
+                    'field_label_remote' => __('Mautic Field', 'webgurus-mautic'),
+                    'field_label_local'  => __('Form Field', 'webgurus-mautic'),
                     'primary_fileds'     => [
                         [
                             'key'           => 'email',
@@ -233,9 +239,6 @@ class Bootstrap extends IntegrationManager
     /*
     * Form Submission Hooks Here
     */
-    /*
-    * Form Submission Hooks Here
-    */
     public function notify($feed, $formData, $entry, $form)
     {
         $feedData = $feed['processedValues'];
@@ -291,14 +294,14 @@ class Bootstrap extends IntegrationManager
             'description'      => __('Mautic feed has scheduled ID:', 'webgurus-mautic') . ' ' . $id
         ]);
 
-        $addCampaign = ArrayHelper::get($feedData, 'add_campaign');
+        $addCampaign = ArrayHelper::get($feedData, 'add_campaigns');
         if ($addCampaign) {
             foreach ($addCampaign as $campaign_ID) {
                 $response = $api->schedule_action($id, 'add_campaign', $campaign_ID);
             }   
         }
 
-        $removeCampaign = ArrayHelper::get($feedData, 'remove_campaign');
+        $removeCampaign = ArrayHelper::get($feedData, 'remove_campaigns');
         if ($removeCampaign) {
             foreach ($removeCampaign as $campaign_ID) {
                 $response = $api->schedule_action($id, 'remove_campaign', $campaign_ID);

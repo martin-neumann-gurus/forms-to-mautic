@@ -3,7 +3,13 @@
     "description": "Webgurus Mautic Integration",
     "type": "wordpress-plugin",
     "require": {
-        "htmlburger/carbon-fields": "^3.6"
+        "htmlburger/carbon-fields": "^3.6.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webgurus\\": "src/WebGurus/",
+            "Carbon_Fields\\": "src/Carbon_Fields/"
+        }
     },
     "authors": [
         {

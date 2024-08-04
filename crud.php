@@ -1,6 +1,6 @@
 <?php
 
-namespace WebgurusMautic\Integrations;
+namespace Webgurus\Mautic;
 /**
 *
  * Base Object Class
@@ -29,21 +29,21 @@ trait CRUD_Object {
         if( is_array($array) ){
             foreach (self::$fields as $key => $description ) {
                 if(array_key_exists($key, $array)){
-                    $this->$key = self::format_data($array[$key], $description);
+                    $this->$key = self::format_db2data($array[$key], $description);
                 }
             }
         }
         elseif (is_object($array)) {
             foreach (self::$fields as $key => $description ) {
                 if(isset($array->$key)){
-                    $this->$key = self::format_data($array->$key, $description);
+                    $this->$key = self::format_db2data($array->$key, $description);
                 }
             }
         }
     }
 
-    // for internal use: loads db formatted data into proper object format
-    protected static function format_data($value, $description) {
+    // for internal use: converts db formatted data (or other formats) into proper object format
+    protected static function format_db2data($value, $description) {
         switch ($description['type']) {
             case 'date':
                 if (is_string($value)) {
@@ -60,13 +60,41 @@ trait CRUD_Object {
                     }
     
             case 'array':
-                return (!empty($value)) ? maybe_unserialize($value):array();
+                return (!empty($value)) ? maybe_unserialize($value) : array();
                 
             default:
                 return $value;
         }
     }
     
+    // for internal use: converts object data to proper  formatted db data
+    protected static function format_data2db($value, $description) {
+        if( !empty($value) || $value === 0 || $value === '0' ){
+            switch ($description['type']) {
+                case 'date':
+                    $result = $value->format('Y-m-d');
+                    break;
+
+                case 'datetime':
+                    $result = $value->format('Y-m-d H:i:s');
+                    break;
+
+                case 'array':
+                    $result = serialize($value);
+                    break;
+
+                default:
+                    $result = $value;
+            }
+        }elseif( $value === null && !empty($description['null']) ){
+            $result = null;
+        }
+        else {
+            $result = $value;
+        }
+        return $result;
+    }
+
     /**
      * Returns this object in the form of an array, useful for saving directly into a database table.
      * @param boolean $db : true to return in DB format
@@ -76,26 +104,7 @@ trait CRUD_Object {
         $array = array();
         foreach ( self::$fields as $key => $description ) {
             if($db){
-                if( !empty($this->$key) || $this->$key === 0 || $this->$key === '0' ){
-                    switch ($description['type']) {
-                        case 'date':
-                            $array[$key] = $this->$key->format('Y-m-d');
-                            break;
-
-                        case 'datetime':
-                            $array[$key] = $this->$key->format('Y-m-d H:i:s');
-                            break;
-    
-                        case 'array':
-                            $array[$key] = serialize($this->$key);
-                            break;
-
-                        default:
-                            $array[$key] = $this->$key;
-                    }
-                }elseif( $this->$key === null && !empty($description['null']) ){
-                    $array[$key] = null;
-                }
+                $array[$key] = self::format_data2db($this->$key, $description);
             }else{
                 $array[$key] = $this->$key;
             }
@@ -126,26 +135,89 @@ trait CRUD_Object {
         global $wpdb;
         return $wpdb->prefix . self::$table_name;
     }
+
+    //For internal use: Format conditions according to data type set for the field
+    private static function format_sql_parms($arg_array, $is_query = false) {
+        $parms = [];
+        $values = [];
+        foreach ($arg_array as $field=>$value) {
+            $description = self::$fields[$field];
+            if ($is_query && is_null($value)) {
+                $parms[] = "`$field` IS NULL";
+            }
+            else {
+                switch ($description['type']) {
+                    case 'int':
+                    case 'bigint':
+                    case 'tinyint':
+                        $format = '%d';
+                        break;
+    
+                    case 'float':
+                        $format = '%f';
+                        break;
+    
+                    default:
+                        $format = '%s';
+                }
+                $parms[] = "`$field` = $format";
+                $values[] = self::format_data2db($value, $description);
+            }
+        }
+        if ($is_query) {
+            $querystring = implode( ' AND ', $parms );
+        }
+        else {
+            $querystring = implode( ', ', $parms );
+        }
+        return ['values'=>$values, 'querystring'=>$querystring];
+    }
+
+    //for internal use: formats SQL condition string depending on the input format
+    private static function format_condition($condition, $args) {
+        if (is_int($condition)) {
+            //we provided the id in integer format
+            $args = [$condition];
+            $condition = 'id = %s';
+        } elseif (is_array ($condition)) {
+            //we provided an array of conditions to be combined by AND
+            $set_cnd = self::format_sql_parms($condition, true);
+            $args = $set_cnd['values'];
+            $condition = $set_cnd['querystring'];
+        }
+        return ['condition'=>$condition, 'values'=>$args];
+    }
     
     /**
      * Updates records within the object database table
-     * @param array $parms : key=>value pairs to update in the database
-     * @param mixed $condition : ID to update, or key=>value pairs of search conditions
+     * @param array $set : array of key=>value pairs to be set
+     * @param mixed $condition : ID to update, array of conditions to be combined by AND, or search condition string in proper SQL formatting
+     * @param mixed $args : replacement paramenters to pass to $wpdb->prepare
      */
-    public static function update ($parms, $condition) {
+    public static function update ($set, $condition, $args = null) {
         global $wpdb;
-        if (!is_array($condition)) $condition = ['id'=>$condition];
-        $wpdb->update(self::table_name(), $parms, $condition);
+        $args = func_get_args();
+        array_shift($args);
+        array_shift($args);
+        $set_fmt = self::format_sql_parms($set);
+        $cond_fmt = self::format_condition($condition, $args);
+
+        $sql = $wpdb->prepare('UPDATE '. self::table_name().' SET '.$set_fmt['querystring'].' WHERE '.$cond_fmt['condition'], array_merge($set_fmt['values'], $cond_fmt['values']));
+        return $wpdb->query($sql);
     }
 
     /**
      * Deletes records within the object database table
-     * @param mixed $condition : ID to delete, or key=>value pairs of search conditions
+     * @param mixed $condition : ID to delete, or search condition string in proper SQL formatting
+     * @param mixed $args : replacement paramenters to pass to $wpdb->prepare
      */
-    public static function delete ($condition) {
+    public static function delete ($condition, $args = null) {
         global $wpdb;
-        if (!is_array($condition)) $condition = ['id'=>$condition];
-        $wpdb->delete(self::table_name(), $condition);
+        $args = func_get_args();
+        array_shift($args);
+        $cond_fmt = self::format_condition($condition, $args);
+        $sql = $wpdb->prepare('DELETE FROM '. self::table_name().' WHERE '.$cond_fmt['condition'], $cond_fmt['values']);
+        return $wpdb->query($sql);
     }
     
     /**
@@ -158,7 +230,8 @@ trait CRUD_Object {
         global $wpdb;
         $args = func_get_args();
         array_shift($args);
-        $sql = $wpdb->prepare('SELECT * FROM '. self::table_name().' WHERE '.$condition, $args);
+        $cond_fmt = self::format_condition($condition, $args);
+        $sql = $wpdb->prepare('SELECT * FROM '. self::table_name().' WHERE '.$cond_fmt['condition'], $cond_fmt['values']);
         $result = $wpdb->get_results($sql, ARRAY_A);
         $output = array();
         $classname = get_class();
@@ -169,7 +242,7 @@ trait CRUD_Object {
     }
 
     /**
-     * searches records according to condition and returns in an array of ojbects
+     * searches the first record according to condition and returns in an ojbect
      * @param string $condition : search condition string in proper SQL formatting
      * @param mixed $args : replacement paramenters to pass to $wpdb->prepare
      * @return object
@@ -178,14 +251,15 @@ trait CRUD_Object {
         global $wpdb;
         $args = func_get_args();
         array_shift($args);
-        $sql = $wpdb->prepare('SELECT * FROM '. self::table_name().' WHERE '.$condition, $args);
+        $cond_fmt = self::format_condition($condition, $args);
+        $sql = $wpdb->prepare('SELECT * FROM '. self::table_name().' WHERE '.$cond_fmt['condition'], $cond_fmt['values']);
         $data = $wpdb->get_row($sql, ARRAY_A);
         $classname = get_class();
         if (!empty($data))  return new $classname($data);
-     }
+    }
 
     /**
-     * searches records according to condition and returns in an array of ojbects
+     * searches records according to condition and returns the specified field in an array
      * @param string $field : database field name to return
      * @param string $condition : search condition string in proper SQL formatting
      * @param mixed $args : replacement paramenters to pass to $wpdb->prepare
@@ -196,10 +270,30 @@ trait CRUD_Object {
         $args = func_get_args();
         array_shift($args);
         array_shift($args);
-        $sql = $wpdb->prepare("SELECT $field FROM ". self::table_name().' WHERE '.$condition, $args);
+        $cond_fmt = self::format_condition($condition, $args);
+        $sql = $wpdb->prepare("SELECT $field FROM ". self::table_name().' WHERE '.$cond_fmt['condition'], $cond_fmt['values']);
         return $wpdb->get_col($sql);
     }
-    
+
+    /**
+     * searches records according to condition and returns the count
+     * @param string $field : database field name to return
+     * @param string $condition : search condition string in proper SQL formatting
+     * @param mixed $args : replacement paramenters to pass to $wpdb->prepare
+     * @return array
+     */
+    public static function get_count($condition, $args = null) {
+        global $wpdb;
+        $args = func_get_args();
+        array_shift($args);
+        $cond_fmt = self::format_condition($condition, $args);
+        $sql = $wpdb->prepare("SELECT COUNT(*) FROM ". self::table_name().' WHERE '.$cond_fmt['condition'], $cond_fmt['values']);
+        return $wpdb->get_var($sql);
+    }
+
+    /**
+     * creates an SQL statement to create the table
+     */
     public static function create_table_sql() {
         global $wpdb;
         

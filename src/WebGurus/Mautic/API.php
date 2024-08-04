@@ -1,62 +1,5 @@
 <?php
-
-namespace WebgurusMautic\Integrations;
-
-//----------------------DB Class Definitions --------------
-Class Record {
-    use CRUD_Object;
-    
-    var $id;
-    var $parent_ID; //Points to the main call that creates the user account
-    var $command;   //The command to send to the Mautic API    
-    var $parms;     //A parameter array
-    var $context;   //In the main call the context where the call was created
-    var $context_ID;//The ID of the context event. 
-    var $contact_ID;   //The Mautic User ID
-    var $status = 0;    //Status can be S: Scheduled   C: Completed  E: Error
-    var $error;     //The error message that occured
-    var $time; //Time of the action
-    public static $fields = [
-    'id' =>['type'=>'primary'],
-    'parent_ID' =>['type'=>'bigint', 'null'=>true],
-    'command' =>['type'=>'char', 'length'=>16],
-    'parms' =>['type'=>'array', 'null'=>true],
-    'context' =>['type'=>'char', 'length'=>12, 'null'=>true],
-    'context_ID' =>['type'=>'bigint', 'null'=>true],
-    'contact_ID' =>['type'=>'bigint', 'null'=>true],
-    'status' =>['type'=>'tinyint'],
-    'error' => ['type'=>'text', 'length'=>500, 'null'=>true],
-    'time' => ['type'=>'datetime']
-    ];
-    public static $table_name = 'wg_mautic_submissions';
-
-    public function process_error($response) {
-        $this->status--;
-        $this->error = $response->get_error_message();
-        $this->save();
-    }
-
-    public function process_status($status = 1) {
-        $this->status = $status;
-        $this->save();
-    }
-
-    public function is_completed() {
-        return ($this->status == 1);
-    }
-
-}
-
-//---------------AJAX handler for API submissions------------
-add_action( 'wp_ajax_wg_mautic_process', '\WebgurusMautic\Integrations\process_ajax');
-add_action( 'wp_ajax_nopriv_wg_mautic_process', '\WebgurusMautic\Integrations\process_ajax');
-
-function process_ajax() {
-    $api = API::instance();
-    $api->process_pending();
-    echo 'success';
-    die();
-}
+namespace Webgurus\Mautic;
 
 // ------------Main class. Instantiate always with  $api = API::instance();--------------------
 class API
@@ -65,7 +8,7 @@ class API
     protected $api_url = '';            //Mautic API URL
     protected $clientId = null;
     protected $clientSecret = null;
-    public $optionKey = null;       //Key we are saving options in WP table
+    public $optionKey = 'wg_mautic_connection';        //Key we are saving options in WP table
     public $callBackUrl = null;     //Callback URL used for OAuth Authentication
     public $settings = [];          //Loaded settings from Option table
     protected $scheduled = false;   //Changes to true after the class schedules an API call, to trigger action at shutdown
@@ -79,7 +22,6 @@ class API
     public function __construct()
     {
         $this->callBackUrl = admin_url('?wg_mautic_auth=1');
-        $this->optionKey = 'wg_mautic_connection';
         if ( false === ( $settings = get_option('wg_mautic_connection') ) ) {  //check for default plugin settings
             if ( false === ( $settings = get_option("_fluentform_mautic_settings") ) ) {  //check for settings of Fluentforms for Mautic
                 $settings = [];
@@ -87,19 +29,24 @@ class API
             else {
                 // import Fluent Form for Mautic settings
                 $settings['api_url'] = $settings['apiUrl'];
+                unset($settings['apiUrl']);
                 $settings['ffMauticSettings'] = true;
+                $this->updateSettings($settings);
             }
         }
         
         $defaults = [
-            'api_url'        => '',
+            'api_url'       => '',
             'client_id'     => '',
             'client_secret' => '',
+            'emails'        => 'c',
             'status'        => false,
             'access_token'  => '',
             'refresh_token' => '',
             'expire_at'     => false,
-            'ffMauticSettings' => false
+            'ffMauticSettings' => false,
+            'db_ver'        => 1,
+            'mautic_ver'    => '5.0'
         ];
 
         $settings = wp_parse_args($settings, $defaults);
@@ -120,7 +67,7 @@ class API
                 //----Make an asynchronous AJAX request that will trigger the API calls
                 $args = array(
                     'blocking'  => false,
-                    'timeout'   => 0.1,
+                    'timeout'   => 0.3,
                     'sslverify' => false
                 );
                 $result = wp_remote_post( admin_url( 'admin-ajax.php' ).'?action=wg_mautic_process', $args );
@@ -247,7 +194,7 @@ class API
             } elseif (!empty($body['error_description'])) {
                 $message = $body['error_description'];
             } else {
-                $message = 'Error when requesting to API Server';
+                $message = 'Unspecified error when sending API Request';
             }
 
             return new \WP_Error('request_error', $message);
@@ -256,7 +203,7 @@ class API
             return $body;
         }
         else {
-            return new \WP_Error('request_error', 'Unspecified error in making the API request. Response Code:' . wp_remote_retrieve_response_code($response));
+            return new \WP_Error('request_error', 'Error in sending the API request. Response:' .$response['response']['message']);
         }
 
         
@@ -326,7 +273,7 @@ class API
             }
             else 
             {
-                return new \WP_Error('request_error', 'Error when requesting OAuth token');
+                return new \WP_Error('request_error', 'OAuth token error: '.$response['response']['message']);
             }
         }
     }
@@ -347,13 +294,19 @@ class API
     public function getCampaigns()
     {
         if (empty ($this->campaigns)) {
-            $response = $this->makeRequest('campaigns?limit=1000&published=1', [], 'GET');
+            $response = $this->makeRequest('campaigns?limit=5000&published=1&orderby=name', [], 'GET');
             if (is_wp_error($response)) return;
+
+            $orgCampaigns = $response['campaigns'];
+            usort($orgCampaigns, function($a, $b) {
+                return strcasecmp($a['name'], $b['name']);
+            });
     
             $campaigns = [];
-            foreach ($response['campaigns'] as $campaign) {
+            foreach ($orgCampaigns as $campaign) {
                 $campaigns[$campaign['id']] = $campaign['name'];
             } 
+
             $this->campaigns = $campaigns;
         }
         return $this->campaigns;
@@ -362,7 +315,7 @@ class API
     public function getSegments()
     {
         if (empty ($this->segments)) {
-            $response = $this->makeRequest('segments?limit=1000&published=1', [], 'GET');
+            $response = $this->makeRequest('segments?limit=5000&published=1&orderby=name', [], 'GET');
             if (is_wp_error($response)) return;
     
             $segments = [];
@@ -377,13 +330,29 @@ class API
     public function getEmails($select = false)
     {
         if (empty ($this->emails)) {
-            $response = $this->makeRequest('emails?limit=1000&published=1&minimal=1', [], 'GET');
+            $sel = $this->settings['emails'];
+            $par = ($sel == 'a') ? '&limit=5000&minimal=1' : '&limit=1000';
+            $response = $this->makeRequest("emails?published=1$par&orderby=name", [], 'GET');
             if (is_wp_error($response)) return;
     
             $emails = [];
+            $sel = $this->settings['emails'];
             if ($select) $emails[0] = __('Send no Email', 'webgurus-mautic');
             foreach ($response['emails'] as $email) {
-                $emails[$email['id']] = $email['name'];
+                switch ($sel) {
+                    case 't':
+                        if ($email['emailType'] == 'template') $emails[$email['id']] = $email['name'];
+                        break;
+
+                    case 's':
+                        if ($email['emailType'] == 'list') $emails[$email['id']] = $email['name'];
+                        break;
+
+                    default:
+                        $emails[$email['id']] = $email['name'];
+
+                }
+                
             } 
             $this->emails = $emails;
         }
@@ -460,7 +429,7 @@ class API
         }
         $id = $this->schedule_subscribe ($subscriber, $context, $context_id);
         if (is_null($id)) return;
-        $this->schedule_actions($id, $subscriber);
+        $this->schedule_actions($id, $settings);
     }
 
     public function schedule_actions ($id, $settings) {
@@ -498,7 +467,7 @@ class API
         $records = Record::get_results("status = 0 AND command IN ('subscribe', 'confirm')");
         foreach ($records as $record) {
             $response = $this->process_record($record);
-            if (!empty($response['contact']["id"])) {
+            if (!is_wp_error($response) && !empty($response['contact']["id"])) {
                 $contact_ID = $response['contact']["id"];
                 $commands = Record::get_results("status = 0 AND parent_ID = %s", $record->id);
                 foreach ($commands as $command) {
@@ -516,16 +485,41 @@ class API
 
     }
 
+    //--------------------Treating Subscribe and Confirm action------------
     public function process_record($record) {
         switch ($record->command) {
             case 'subscribe':
                 $response = $this->makeRequest('contacts/new', $record->parms, 'POST');
 
                 if (is_wp_error($response)) {
-                    $record->process_error($response);
-                    return $response;
+                    //Check for invalid country or state error
+                    $errmsg = $response->get_error_message();
+                    $repeat = false;
+                    if (strpos($errmsg, "country: This value is not valid.") !== false) {
+                        $record->parms['country'] = '';
+                        $repeat = true;
+                    }
+                    if (strpos($errmsg, "state: This value is not valid.") !== false) {
+                        $record->parms['state'] = '';
+                        $repeat = true;
+                    }
+                    if ($repeat) {
+                        $record->error = $errmsg;
+                        $response = $this->makeRequest('contacts/new', $record->parms, 'POST');
+                        if (is_wp_error($response)) {
+                            $record->write_error($response);
+                            return $response;
+                        }
+
+                    }
+                    else {
+                        $record->write_error($response);
+                        return $response;
+                    }
+                    
                 }
-                elseif (empty($response['contact']["id"])) return 'wrong';
+                if (empty($response['contact']["id"])) return 'wrong';
+
                 $record->contact_ID =  $response['contact']["id"];
                 break;
 
@@ -533,12 +527,12 @@ class API
                 $contact_id = $record->contact_ID;
                 $response = $this->makeRequest('contacts/'.$contact_id, 'GET');
                 if (is_wp_error($response)) {
-                    $record->process_error($response);
+                    $record->write_error($response);
                     return $response;
                 }
                 elseif (empty($response['contact']["id"])) return 'wrong';
                 if ($response['contact']['fields']['all']['email'] != $record->parms['email']) {  //does not match with email supplied
-                    $record->process_status(2);
+                    $record->write_status(Record::CANCELLED);
                     return 'wrong';
                 } 
                 //Segment Check
@@ -547,36 +541,37 @@ class API
                 if ($parms['confirm_check'] != 'n') {
                     $segments = $this->makeRequest('contacts/'.$contact_id.'/segments', 'GET');
                     if (is_wp_error($segments)) {
-                        $record->process_error($segments);
+                        $record->write_error($segments);
                         return $response;
                     }
                     
                     switch ($parms['confirm_check']) {
                         case 's':
                             if (key_exists($parms['confirm_segment'], $segments['lists'])) {
-                                $record->process_status(2);
+                                $record->write_status(Record::CANCELLED);
                                 return 'segcheck'; 
                             } 
                             break;  
 
                         case 'u':
                             if (!key_exists($parms['confirm_segment'], $segments['lists'])) {
-                                $record->process_status(2);
+                                $record->write_status(Record::CANCELLED);
                                 return 'segcheck'; 
                             } 
                             break;  
                     }
                 }
-                //if all checks positive, we schedule the actions that we will process right away
+                //if all checks positive, we schedule the actions that we will process in the next step
                 $this->schedule_actions($record->id, $parms);
                 break;
 
         }
-        $record->process_status(1);
+        $record->write_status(Record::FINISHED);
         return $response;
     }
 
-    private function process_command($command, $contact_id) {
+    //-----------Processing a single command------------------
+    public function process_command($command, $contact_id) {
         switch ($command->command) {
             case 'add_campaign':
                 $response = $this->makeRequest('campaigns/'.$command->parms.'/contact/'.$contact_id.'/add', [], 'POST');
@@ -606,10 +601,36 @@ class API
         $command->time = new \DateTime();
 
         if (is_wp_error($response)) {
-            $command->process_error($response);
+            $command->write_error($response);
         }
         else {
-            $command->process_status(1);
+            $command->write_status(Record::FINISHED);
+        }
+        return $response;
+    }
+
+    //------------------Processing the failed requests----------------------
+    public function process_errors($minerror, $maxerror) {
+        global $wpdb;        
+        $this->process_pending();
+        $records = Record::get_results("status <= %s AND status >= %s AND command IN ('subscribe', 'confirm')", $minerror, $maxerror);
+        foreach ($records as $record) {
+            set_time_limit(100);    //unless we are in save mode, we get some extra time
+            $response = $this->process_record($record);
+            if (!is_wp_error($response) && !empty($response['contact']["id"])) {
+                $contact_ID = $response['contact']["id"];
+                $commands = Record::get_results("status = 0 AND parent_ID = %s", $record->id);
+                foreach ($commands as $command) {
+                    $this->process_command($command, $contact_ID);
+                } 
+            }
+        }
+        //-----Check for records that need to process only the commands-----
+        $sql = $wpdb->prepare('SELECT s1.*, s2.contact_id FROM %1$s s1 INNER JOIN %1$s s2 ON s1.parent_ID = s2.id WHERE s2.status = 1 AND s1.status <= %2$s AND s1.status >= %3$s', Record::table_name(), $minerror, $maxerror);
+        $results = $wpdb->get_results($sql, ARRAY_A);
+        foreach ($results as $result) {
+            $command = new Record($result);
+            $this->process_command($command, $result['contact_id']);
         }
     }
 }
