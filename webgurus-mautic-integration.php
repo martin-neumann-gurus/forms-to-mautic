@@ -5,7 +5,7 @@
  * Description: Send all your WordPress sign ups directly to Mautic
  * Author: Martin Neumann - Webgurus
  * Author URI:  https://www.webgurus.net
- * Version: 1.1.0
+ * Version: 1.1.1
  * Text Domain: webgurus-mautic
  */
 

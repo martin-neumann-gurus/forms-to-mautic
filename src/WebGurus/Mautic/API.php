@@ -65,12 +65,29 @@ class API
             if ($this->scheduled) {
                 //$this->process_pending();
                 //----Make an asynchronous AJAX request that will trigger the API calls
-                $args = array(
-                    'blocking'  => false,
-                    'timeout'   => 0.3,
-                    'sslverify' => false
-                );
-                $result = wp_remote_post( admin_url( 'admin-ajax.php' ).'?action=wg_mautic_process', $args );
+                $url_parts = parse_url(admin_url( 'admin-ajax.php' ));
+                $socket = fsockopen('localhost', 80, $errno, $errstr, 2);
+                if (!$socket) {
+                    $socket = fsockopen('ssl://localhost', 443, $errno, $errstr, 2);
+                    if (!$socket) {
+                        //Fallback if for some reasons it cannot establish a socket connection
+                        $args = array(
+                            'blocking'  => false,
+                            'timeout'   => 0.3,
+                            'sslverify' => false
+                        );
+                        $result = wp_remote_post( admin_url( 'admin-ajax.php' ).'?action=wg_mautic_process', $args );
+                        return;
+                    }
+                }
+                // Construct the HTTP GET request
+                $request = "GET " . $url_parts['path'] . '?action=wg_mautic_process' . " HTTP/1.1\r\n";
+                $request .= "Host: localhost\r\n";
+                $request .= "Connection: Close\r\n\r\n";
+
+                // Send the request
+                fwrite($socket, $request);
+                fclose($socket);
             }
         });
     }
@@ -293,17 +310,12 @@ class API
 
     public function getCampaigns()
     {
-        if (empty ($this->campaigns)) {
-            $response = $this->makeRequest('campaigns?limit=5000&published=1&orderby=name', [], 'GET');
+        if ($this->campaigns == null) {
+            $response = $this->makeRequest('campaigns?limit=5000&published=1&orderBy=name', [], 'GET');
             if (is_wp_error($response)) return;
 
-            $orgCampaigns = $response['campaigns'];
-            usort($orgCampaigns, function($a, $b) {
-                return strcasecmp($a['name'], $b['name']);
-            });
-    
             $campaigns = [];
-            foreach ($orgCampaigns as $campaign) {
+            foreach ($response['campaigns'] as $campaign) {
                 $campaigns[$campaign['id']] = $campaign['name'];
             } 
 
@@ -314,8 +326,8 @@ class API
 
     public function getSegments()
     {
-        if (empty ($this->segments)) {
-            $response = $this->makeRequest('segments?limit=5000&published=1&orderby=name', [], 'GET');
+        if ($this->segments == null) {
+            $response = $this->makeRequest('segments?limit=5000&published=1&orderBy=name', [], 'GET');
             if (is_wp_error($response)) return;
     
             $segments = [];
@@ -329,30 +341,26 @@ class API
 
     public function getEmails($select = false)
     {
-        if (empty ($this->emails)) {
-            $sel = $this->settings['emails'];
-            $par = ($sel == 'a') ? '&limit=5000&minimal=1' : '&limit=1000';
-            $response = $this->makeRequest("emails?published=1$par&orderby=name", [], 'GET');
+        if ($this->emails == null) {
+            switch ($this->settings['emails']) {
+                case 't':
+                    $par = '&where%5B0%5D%5Bcol%5D=emailType&where%5B0%5D%5Bexpr%5D=like&where%5B0%5D%5Bval%5D=template';
+                    break;
+
+                case 's':
+                    $par = '&where%5B0%5D%5Bcol%5D=emailType&where%5B0%5D%5Bexpr%5D=like&where%5B0%5D%5Bval%5D=list';
+                    break;
+
+                default:
+                    $par = '';
+            }
+            $response = $this->makeRequest("emails?published=1$par&limit=5000&minimal=1&orderBy=name", [], 'GET');
             if (is_wp_error($response)) return;
     
             $emails = [];
-            $sel = $this->settings['emails'];
             if ($select) $emails[0] = __('Send no Email', 'webgurus-mautic');
             foreach ($response['emails'] as $email) {
-                switch ($sel) {
-                    case 't':
-                        if ($email['emailType'] == 'template') $emails[$email['id']] = $email['name'];
-                        break;
-
-                    case 's':
-                        if ($email['emailType'] == 'list') $emails[$email['id']] = $email['name'];
-                        break;
-
-                    default:
-                        $emails[$email['id']] = $email['name'];
-
-                }
-                
+                $emails[$email['id']] = $email['name'];
             } 
             $this->emails = $emails;
         }
@@ -361,7 +369,7 @@ class API
 
     public function getFields()
     {
-        if (empty ($this->fields)) {
+        if ($this->fields == null) {
             $fields = $this->makeRequest('contacts/list/fields', [], 'GET');
             if (is_wp_error($fields)) return;
     
